@@ -1,6 +1,7 @@
-package com.carlosgracite.katamorph.sample.test;
+package com.carlosgracite.katamorph.sample.common;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.carlosgracite.katamorph.presenter.RxPresenter;
@@ -18,7 +19,7 @@ public class TestPresenter extends RxPresenter<TestView> {
 
     private int value;
 
-    public TestPresenter(TestView testView) {
+    public TestPresenter(@NonNull TestView testView) {
         super(testView);
     }
 
@@ -39,7 +40,7 @@ public class TestPresenter extends RxPresenter<TestView> {
     }
 
     @Override
-    protected void onRestoreRequest(String id) {
+    protected void onRestoreRequest(@NonNull String id) {
         super.onRestoreRequest(id);
         switch (id) {
             case REQUEST_LOAD1:
@@ -49,7 +50,7 @@ public class TestPresenter extends RxPresenter<TestView> {
     }
 
     @Override
-    public void onSave(Bundle bundle) {
+    public void onSave(@NonNull Bundle bundle) {
         super.onSave(bundle);
         bundle.putInt("value", value);
     }

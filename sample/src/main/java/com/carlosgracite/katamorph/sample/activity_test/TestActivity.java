@@ -1,37 +1,31 @@
-package com.carlosgracite.katamorph.sample.test;
+package com.carlosgracite.katamorph.sample.activity_test;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.carlosgracite.katamorph.sample.R;
-import com.carlosgracite.katamorph.view.MvpSupportFragment;
+import com.carlosgracite.katamorph.sample.common.TestPresenter;
+import com.carlosgracite.katamorph.sample.common.TestView;
+import com.carlosgracite.katamorph.view.MvpAppCompatActivity;
 
-public class TestFragment extends MvpSupportFragment<TestView, TestPresenter> implements TestView {
+public class TestActivity extends MvpAppCompatActivity<TestView, TestPresenter> implements TestView {
 
     private ProgressBar progressBar;
     private Button button;
     private TextView text;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setPresenter(new TestPresenter(this));
-    }
+        setContentView(R.layout.view_test);
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_test, container, false);
-
-        progressBar = (ProgressBar) rootView.findViewById(R.id.progress);
-        button = (Button) rootView.findViewById(R.id.button);
-        text = (TextView) rootView.findViewById(R.id.textView);
+        progressBar = (ProgressBar) findViewById(R.id.progress);
+        button = (Button) findViewById(R.id.button);
+        text = (TextView) findViewById(R.id.textView);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -40,7 +34,8 @@ public class TestFragment extends MvpSupportFragment<TestView, TestPresenter> im
             }
         });
 
-        return rootView;
+        setPresenter(new TestPresenter(this));
+        getPresenter().onViewCreated(savedInstanceState);
     }
 
     @Override

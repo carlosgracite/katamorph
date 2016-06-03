@@ -1,6 +1,7 @@
 package com.carlosgracite.katamorph.presenter;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.carlosgracite.katamorph.cache.RxCache;
@@ -14,7 +15,6 @@ import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.subscriptions.CompositeSubscription;
 
-
 public class RxPresenter<View> extends Presenter<View> {
 
     private CompositeSubscription subscriptions;
@@ -23,7 +23,7 @@ public class RxPresenter<View> extends Presenter<View> {
 
     public HashSet<String> requestIds = new HashSet<>();
 
-    public RxPresenter(View view) {
+    public RxPresenter(@NonNull View view) {
         super(view);
         rxCache = RxCache.getInstance();
         subscriptions = new CompositeSubscription();
@@ -36,23 +36,22 @@ public class RxPresenter<View> extends Presenter<View> {
             requestIds = new HashSet<>();
         } else {
             requestIds = (HashSet<String>)state.getSerializable("requests_state");
-            onRestoreRequests();
         }
     }
 
     @Override
-    public void onSave(Bundle bundle) {
+    public void onSave(@NonNull Bundle bundle) {
         super.onSave(bundle);
         bundle.putSerializable("requests_state", requestIds);
     }
 
-    protected void onRestoreRequests() {
+    public void onRestoreRequests() {
         for (String id: requestIds) {
             onRestoreRequest(id);
         }
     }
 
-    protected void onRestoreRequest(String id) {
+    protected void onRestoreRequest(@NonNull String id) {
 
     }
 
@@ -69,15 +68,19 @@ public class RxPresenter<View> extends Presenter<View> {
         }
     }
 
-    protected <T> void load(Observable<T> observable, final Action1<T> onNext) {
+    protected <T> void load(@NonNull Observable<T> observable,
+                            @NonNull final Action1<T> onNext) {
         add(observable.subscribe(onNext));
     }
 
-    protected <T> void load(Observable<T> observable, final Subscriber<T> subscriber) {
+    protected <T> void load(@NonNull Observable<T> observable,
+                            @NonNull final Subscriber<T> subscriber) {
         add(observable.subscribe(subscriber));
     }
 
-    protected <T> void load(final String key, Observable<T> observable, final Subscriber<T> subscriber) {
+    protected <T> void load(@NonNull final String key,
+                            @NonNull Observable<T> observable,
+                            @NonNull final Subscriber<T> subscriber) {
         Subscription subscription = rxCache.get(key, observable.doOnUnsubscribe(new Action0() {
             @Override
             public void call() {
@@ -91,7 +94,9 @@ public class RxPresenter<View> extends Presenter<View> {
         add(subscription);
     }
 
-    protected <T> void load(final String key, Observable<T> observable, final Action1<T> onNext) {
+    protected <T> void load(@NonNull final String key,
+                            @NonNull Observable<T> observable,
+                            @NonNull final Action1<T> onNext) {
         Subscription subscription = rxCache.get(key, observable.doOnUnsubscribe(new Action0() {
             @Override
             public void call() {
@@ -105,8 +110,11 @@ public class RxPresenter<View> extends Presenter<View> {
         add(subscription);
     }
 
-    protected void add(Subscription subscription) {
+    protected void add(@NonNull Subscription subscription) {
         subscriptions.add(subscription);
     }
 
+    public boolean hasPendingRequests() {
+        return !requestIds.isEmpty();
+    }
 }

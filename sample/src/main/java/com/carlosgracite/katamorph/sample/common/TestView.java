@@ -1,4 +1,4 @@
-package com.carlosgracite.katamorph.sample.test;
+package com.carlosgracite.katamorph.sample.common;
 
 /**
  * Created by carlos on 01/06/16.

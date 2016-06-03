@@ -1,13 +1,14 @@
 package com.carlosgracite.katamorph.presenter;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 public class Presenter<View> {
 
     private View view;
 
-    public Presenter(View view) {
+    public Presenter(@NonNull View view) {
         this.view = view;
     }
 
@@ -15,7 +16,7 @@ public class Presenter<View> {
 
     }
 
-    public void onSave(Bundle bundle) {
+    public void onSave(@NonNull Bundle bundle) {
 
     }
 
