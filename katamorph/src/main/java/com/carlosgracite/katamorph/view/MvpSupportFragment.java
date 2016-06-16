@@ -39,7 +39,9 @@ public abstract class MvpSupportFragment<V, P extends RxPresenter<V>>
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        presenter.onSave(outState);
+        if (presenter != null) {
+            presenter.onSave(outState);
+        }
         isDestroyedBySystem = true;
     }
 
