@@ -1,48 +1,51 @@
 package com.carlosgracite.katamorph.presenter;
 
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
+import com.carlosgracite.katamorph.cache.RequestGroup;
 import com.carlosgracite.katamorph.cache.RxCache;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-import rx.Observable;
-import rx.Subscriber;
-import rx.Subscription;
-import rx.functions.Action0;
-import rx.functions.Action1;
-import rx.subscriptions.CompositeSubscription;
+import io.reactivex.Observable;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.exceptions.Exceptions;
+import io.reactivex.functions.Consumer;
 
 public class RxPresenter<View> extends Presenter<View> {
 
-    private CompositeSubscription subscriptions;
+    private CompositeDisposable disposables;
+    private CompositeDisposable requestDisposables;
 
     protected final RxCache rxCache;
 
-    public HashSet<String> requestIds = new HashSet<>();
+    public Set<String> requestIds = new HashSet<>();
+    public Map<String, RequestHandler> requestHandlerMap = new HashMap<>();
 
-    public RxPresenter(@NonNull View view) {
-        super(view);
+    private RequestGroup requestGroup;
+
+    public RxPresenter() {
         rxCache = RxCache.getInstance();
-        subscriptions = new CompositeSubscription();
+        disposables = new CompositeDisposable();
+        requestDisposables = new CompositeDisposable();
     }
 
-    @Override
-    public void onViewCreated(@Nullable Bundle state) {
-        super.onViewCreated(state);
-        if (state == null) {
-            requestIds = new HashSet<>();
-        } else {
-            requestIds = (HashSet<String>)state.getSerializable("requests_state");
-        }
+    public Set<String> getRequestIds() {
+        return requestIds;
     }
 
-    @Override
-    public void onSave(@NonNull Bundle bundle) {
-        super.onSave(bundle);
-        bundle.putSerializable("requests_state", requestIds);
+    public void onCreate(boolean recreated, boolean firstCreated) {
+
+    }
+
+    public void bindRequests() {
+
     }
 
     public void onRestoreRequests() {
@@ -51,70 +54,171 @@ public class RxPresenter<View> extends Presenter<View> {
         }
     }
 
-    protected void onRestoreRequest(@NonNull String id) {
+    protected <T> void register(String key, RequestHandler<T> requestHandler) {
+        requestHandlerMap.put(key, requestHandler);
+    }
+
+    protected <T> void register(String key, @NonNull final Consumer onStartLoad, @NonNull final Consumer<T> onSuccess) {
+        register(key, new SimpleRequestHandler<T>() {
+            @Override
+            public void onStartLoad(boolean isResubscribing) {
+                try {
+                    onStartLoad.accept(isResubscribing);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Exceptions.throwIfFatal(e);
+                }
+            }
+
+            @Override
+            public void onSuccess(T result) throws Exception {
+                onSuccess.accept(result);
+            }
+        });
+    }
+
+    protected <T> void register(String key, @NonNull final Consumer<Boolean> onStartLoad,
+                                @NonNull final Consumer<T> onSuccess, @NonNull final Consumer<Throwable> onError) {
+        register(key, new SimpleRequestHandler<T>() {
+            @Override
+            public void onStartLoad(boolean isResubscribing) {
+                try {
+                    onStartLoad.accept(isResubscribing);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Exceptions.throwIfFatal(e);
+                }
+            }
+
+            @Override
+            public void onSuccess(T result) throws Exception {
+                onSuccess.accept(result);
+            }
+
+            @Override
+            public void onError(Throwable throwable) throws Exception {
+                onError.accept(throwable);
+            }
+        });
+    }
+
+    protected void onRestoreRequest(@NonNull String key) {
+        Observable observable = requestGroup.get(key);
+
+        if (observable != null) {
+            subscribeToRequest(key, observable, true);
+        }
+    }
+
+    protected <T> void doRequest(final String key, Observable<T> observable) {
+        requestIds.add(key);
+        Observable<T> cachedObservable = requestGroup.get(key, observable);
+        subscribeToRequest(key, cachedObservable, false);
+    }
+
+    public void onRestoreState(@NonNull Bundle state) {
 
     }
 
+    public void onSaveState(@NonNull Bundle bundle) {
+
+    }
+
+    public void disposeRequests() {
+        requestDisposables.clear();
+    }
+
+    @CallSuper
     @Override
     public void onDestroy(boolean isDestroyedBySystem) {
         super.onDestroy(isDestroyedBySystem);
-        subscriptions.clear();
+        disposables.clear();
+        disposeRequests();
 
         if (!isDestroyedBySystem) {
-            for (String key: requestIds) {
-                rxCache.remove(key);
-            }
+            rxCache.remove(requestGroup.getId());
             requestIds.clear();
         }
     }
 
-    protected <T> void load(@NonNull Observable<T> observable,
-                            @NonNull final Action1<T> onNext) {
-        add(observable.subscribe(onNext));
-    }
-
-    protected <T> void load(@NonNull Observable<T> observable,
-                            @NonNull final Subscriber<T> subscriber) {
-        add(observable.subscribe(subscriber));
-    }
-
-    protected <T> void load(@NonNull final String key,
-                            @NonNull Observable<T> observable,
-                            @NonNull final Subscriber<T> subscriber) {
-        Subscription subscription = rxCache.get(key, observable.doOnUnsubscribe(new Action0() {
+    private  <T> void subscribeToRequest(final String key, Observable<T> observable, boolean resubscribing) {
+        final RequestHandler requestHandler = requestHandlerMap.get(key);
+        requestHandler.onStartLoad(resubscribing);
+        addInternal(observable.subscribe(new Consumer<T>() {
             @Override
-            public void call() {
-                rxCache.remove(key);
+            public void accept(T o) throws Exception {
+                requestGroup.remove(key);
                 requestIds.remove(key);
+                requestHandler.onSuccess(o);
             }
-        })).subscribe(subscriber);
-
-        requestIds.add(key);
-
-        add(subscription);
-    }
-
-    protected <T> void load(@NonNull final String key,
-                            @NonNull Observable<T> observable,
-                            @NonNull final Action1<T> onNext) {
-        Subscription subscription = rxCache.get(key, observable.doOnUnsubscribe(new Action0() {
+        }, new Consumer<Throwable>() {
             @Override
-            public void call() {
-                rxCache.remove(key);
+            public void accept(Throwable throwable) throws Exception {
+                requestGroup.remove(key);
                 requestIds.remove(key);
+                requestHandler.onError(throwable);
             }
-        })).subscribe(onNext);
-
-        requestIds.add(key);
-
-        add(subscription);
+        }));
     }
 
-    protected void add(@NonNull Subscription subscription) {
-        subscriptions.add(subscription);
+    protected void add(@NonNull Disposable disposable) {
+        disposables.add(disposable);
+    }
+
+    private void addInternal(@NonNull Disposable disposable) {
+        requestDisposables.add(disposable);
     }
 
     public boolean hasPendingRequests() {
         return !requestIds.isEmpty();
+    }
+
+    public boolean isPendingRequest(String key) {
+        return requestIds.contains(key);
+    }
+
+    public boolean setupRequestIds(Set<String> requestIds, Long requestGroupId) {
+        this.requestIds = requestIds;
+
+        boolean requestGroupFirstCreated = false;
+
+        if (requestGroupId != null) {
+            requestGroup = rxCache.getGroup(requestGroupId);
+        }
+
+        if (requestGroup == null) {
+            requestGroupFirstCreated = true;
+            requestGroup = rxCache.newGroup();
+        }
+
+        return requestGroupFirstCreated;
+    }
+
+    public RequestGroup getRequestGroup() {
+        return requestGroup;
+    }
+
+    protected static class SimpleRequestHandler<T> implements RequestHandler<T> {
+
+        @Override
+        public void onStartLoad(boolean isResubscribing) {
+
+        }
+
+        @Override
+        public void onSuccess(T result) throws Exception {
+
+        }
+
+        @Override
+        public void onError(Throwable throwable) throws Exception {
+
+        }
+    }
+
+    protected interface RequestHandler<T> {
+        void onStartLoad(boolean isResubscribing);
+        void onSuccess(T result) throws Exception;
+        void onError(Throwable throwable) throws Exception;
     }
 }

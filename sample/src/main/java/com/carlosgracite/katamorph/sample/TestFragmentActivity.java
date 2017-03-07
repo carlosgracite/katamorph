@@ -1,15 +1,10 @@
-package com.carlosgracite.katamorph.sample.fragment_test;
+package com.carlosgracite.katamorph.sample;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
-import com.carlosgracite.katamorph.sample.R;
-
-/**
- * Created by carlos on 02/06/16.
- */
-public class FragmentTestActivity extends AppCompatActivity {
+public class TestFragmentActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Katamorph.iml" filepath="$PROJECT_DIR$/Katamorph.iml" />
-      <module fileurl="file://$PROJECT_DIR$/sample/app.iml" filepath="$PROJECT_DIR$/sample/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/katamorph/katamorph.iml" filepath="$PROJECT_DIR$/katamorph/katamorph.iml" />
+      <module fileurl="file://$PROJECT_DIR$/katamorph.iml" filepath="$PROJECT_DIR$/katamorph.iml" />
+      <module fileurl="file://$PROJECT_DIR$/katamorph/katamorph-katamorph.iml" filepath="$PROJECT_DIR$/katamorph/katamorph-katamorph.iml" />
       <module fileurl="file://$PROJECT_DIR$/sample/sample.iml" filepath="$PROJECT_DIR$/sample/sample.iml" />
     </modules>
   </component>

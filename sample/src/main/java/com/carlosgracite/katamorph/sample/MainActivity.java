@@ -5,9 +5,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
-import com.carlosgracite.katamorph.sample.activity_test.TestActivity;
-import com.carlosgracite.katamorph.sample.fragment_test.FragmentTestActivity;
-
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -18,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, FragmentTestActivity.class));
+                startActivity(new Intent(MainActivity.this, TestFragmentActivity.class));
             }
         });
 
