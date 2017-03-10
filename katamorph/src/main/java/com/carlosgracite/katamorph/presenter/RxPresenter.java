@@ -135,7 +135,7 @@ public class RxPresenter<View> extends Presenter<View> {
         disposables.clear();
         disposeRequests();
 
-        if (!isDestroyedBySystem) {
+        if (!isDestroyedBySystem && requestGroup != null) {
             rxCache.remove(requestGroup.getId());
             requestIds.clear();
         }
