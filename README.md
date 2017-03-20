@@ -1,6 +1,6 @@
 # Katamorph
 
-##Usage
+## Usage
 
 ```groovy
 repositories {
@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.carlosgracite:katamorph:0.3.0'
+    compile 'com.github.carlosgracite:katamorph:0.3.1'
 }
 ```
 
